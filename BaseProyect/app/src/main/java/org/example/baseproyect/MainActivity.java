@@ -9,12 +9,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.InstallCallbackInterface;
 import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
 
@@ -22,7 +25,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     private static final int SOLICITUD_PERMISO_CAMERA = 0;
     private View view;
-    private static final String TAG = "Ejemplo OCV (MainActivity)";
+    private static final String TAG = "MainActivity";
     private CameraBridgeViewBase cameraView;
 
     @Override
@@ -61,10 +64,42 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
        }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (cameraView != null)
+            cameraView.disableView();
+    }
 
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(cameraView != null){
+            cameraView.disableView();
+        }
+    }
+
+    @Override
     public void onManagerConnected(int status) {
+        switch (status) {
+            case LoaderCallbackInterface.SUCCESS:
+                Log.i(TAG, "Ok");
+                cameraView.enableView();
+                break;
+            default:
+                Log.i(TAG, "OpenCV no se cargo");
+                Toast.makeText(MainActivity.this, "OpenCV no se cargo",
+                        Toast.LENGTH_LONG).show();
+                finish();
+                break;
+        }
 
     }
 
@@ -85,6 +120,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        return null;
+        return inputFrame.rgba();
     }
+
+
 }
