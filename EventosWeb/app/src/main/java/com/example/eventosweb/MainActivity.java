@@ -53,8 +53,7 @@ public class MainActivity extends AppCompatActivity {
         navegador = (WebView) findViewById(R.id.webkit);
         navegador.getSettings().setJavaScriptEnabled(true);
         navegador.getSettings().setBuiltInZoomControls(false);
-        navegador.loadUrl("file:///android_asset/index.html");
-        Log.wtf("Holaa holaaa", "veo el logcat :)");
+        navegador.loadUrl("https://eventos-c583b.firebaseapp.com/index.html");
 
         barraProgreso = (ProgressBar) findViewById(R.id.barraProgreso);
         navegador.setWebChromeClient(new WebChromeClient() {
