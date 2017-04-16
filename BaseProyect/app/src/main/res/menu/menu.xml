@@ -23,17 +23,22 @@
     <item
         android:id="@+id/changeInput"
         android:icon="@android:drawable/ic_menu_gallery"
-        android:title="Cambiar entrada">
+        android:title="@string/changeInput">
         <menu>
             <item
                 android:id="@+id/camera_Input"
-                android:title="Cámara"/>
+                android:title="@string/cameraInput"/>
             <item
                 android:id="@+id/file1_Input"
-                android:title="Fichero1"/>
+                android:title="@string/file1Input"/>
             <item
                 android:id="@+id/file2_Input"
-                android:title="Fichero2"/>
+                android:title="@string/file2Input"/>
         </menu>
+    </item>
+    <item
+        android:id="@+id/save_images"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title=" Guardar imagenes ">
     </item>
 </menu>
