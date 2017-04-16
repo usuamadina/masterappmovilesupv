@@ -20,4 +20,20 @@
                 android:title="320x240"/>
         </menu>
     </item>
+    <item
+        android:id="@+id/changeInput"
+        android:icon="@android:drawable/ic_menu_gallery"
+        android:title="Cambiar entrada">
+        <menu>
+            <item
+                android:id="@+id/camera_Input"
+                android:title="Cámara"/>
+            <item
+                android:id="@+id/file1_Input"
+                android:title="Fichero1"/>
+            <item
+                android:id="@+id/file2_Input"
+                android:title="Fichero2"/>
+        </menu>
+    </item>
 </menu>

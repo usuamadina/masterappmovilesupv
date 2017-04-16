@@ -3,18 +3,17 @@ package org.example.baseproyect;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -22,7 +21,11 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.InstallCallbackInterface;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+
 import android.hardware.Camera;
 
 
@@ -32,10 +35,13 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private static final String TAG = "MainActivity";
     private CameraBridgeViewBase cameraView;
 
-    private int cameraIndex; // 0-> camara trasera; 1-> camara frontal
-    private int cam_width = 320;// resolucion deseada de la imagen
+    private int cameraIndex; // 0--> back camera; 1--> front camera
+    private int cam_width = 320;// image resolution
     private int cam_height = 240;
     private static final String STATE_CAMERA_INDEX = "cameraIndex";
+    private int inputType = 0; // 0 -->camera 1--> file1 2-->file2
+    private Mat imageResource_;
+    private boolean reloadResource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,11 +127,28 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        return inputFrame.rgba();
+        Mat input;
+        if (inputType == 0) {
+            input = inputFrame.rgba();
+        } else {
+            if(reloadResource == true) {
+                imageResource_ = new Mat();
+                int RECURSOS_FICHEROS[] = {0, R.raw.img1, R.raw.img2};
+                Bitmap bitmap = BitmapFactory.decodeResource(getResources(),
+                        RECURSOS_FICHEROS[inputType]);
+                //Convert the resource to an OpenCV Mat
+                Utils.bitmapToMat(bitmap, imageResource_);
+                Imgproc.resize(imageResource_, imageResource_, new Size(cam_width, cam_height));
+                reloadResource = false;
+            }
+            input = imageResource_;
+        }
+        Mat output = input.clone();
+        return output;
     }
 
 
-    @Override
+   @Override
     public void onManagerConnected(int status) {
         switch(status){
             case LoaderCallbackInterface.SUCCESS:
@@ -185,6 +208,17 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 cam_width = 320;
                 cam_height = 240;
                 restartResolution();
+                break;
+            case R.id.camera_Input:
+                inputType = 0;
+                break;
+            case R.id.file1_Input:
+                inputType = 1;
+                reloadResource = true;
+                break;
+            case R.id.file2_Input:
+                inputType = 2;
+                reloadResource = true;
                 break;
         }
         String msg = "W=" + Integer.toString(cam_width) + " H= " +
