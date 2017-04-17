@@ -40,13 +40,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private static final int SOLICITUD_PERMISO_ALMACENAMIENTO = 2;
     private static final String TAG = "MainActivity";
     private CameraBridgeViewBase cameraView;
+    private View view;
+    private Bundle bundle;
 
     private int cameraIndex; // 0--> back camera; 1--> front camera
     private int cam_width = 320;// image resolution
     private int cam_height = 240;
     private static final String STATE_CAMERA_INDEX = "cameraIndex";
     private int inputType = 0; // 0 -->camera 1--> file1 2-->file2
-    private Mat imageResource_,input, output;
+    private Mat imageResource_, input, output;
     private boolean reloadResource;
     private boolean saveNextImage = false;
 
@@ -57,6 +59,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
+        view = findViewById(R.id.content_main);
+        Log.d("onCreate", "VISTA CREADA");
         cameraView = (CameraBridgeViewBase) findViewById(R.id.camera_view);
         if (savedInstanceState != null) {
             cameraIndex = savedInstanceState.getInt(STATE_CAMERA_INDEX, 0);
@@ -64,15 +68,30 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             cameraIndex = CameraBridgeViewBase.CAMERA_ID_BACK;
         }
         cameraView.setCameraIndex(cameraIndex);
-        cameraView =(CameraBridgeViewBase)findViewById(R.id.camera_view);
         cameraView.setCvCameraViewListener(this);
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
-        {
-            Log.e("onCreate","tengo permisos");
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+//            cameraSettings(savedInstanceState);
+//            Log.e("onCreate", "tengo permisos");
+//
+//
+//        } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+//            Snackbar.make(view, "Se necesita permiso para usar la cámara.", Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    Log.d("onCreate","permisos rationale");
+//                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, SOLICITUD_PERMISO_CAMARA);
+//                }
+//            }).show();
+//        } else {
+//            Log.d("Oncreate","permisos normales");
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, SOLICITUD_PERMISO_CAMARA);
+//        }
 
-        }
-        else ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, SOLICITUD_PERMISO_CAMARA);
 
+        //ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, SOLICITUD_PERMISO_CAMARA);
+    }
+
+    public void cameraSettings(Bundle savedInstanceState) {
 
     }
 
@@ -80,24 +99,23 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == SOLICITUD_PERMISO_CAMARA) {
-            Log.e("onRequest", "he pedido permiso");
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                cameraView.setCameraIndex(cameraIndex);
-                cameraView = (CameraBridgeViewBase) findViewById(R.id.camera_view);
-                cameraView.setCvCameraViewListener(this);
                 Log.e("onRequest", "permisosCondecidos");
+                cameraView.setMaxFrameSize(cam_width, cam_height);
+                cameraView.enableView();
 
             } else {
-                Log.e("onRequestPermission", "no tengo");
-                finish();
-                // Toast.makeText(this, "sin cacceso a la cámara",Toast.LENGTH_SHORT).show();
                 Snackbar.make(cameraView, "Sin acceso a la cámara, no funciona la aplicación", Snackbar.LENGTH_INDEFINITE).show();
+                Log.e("onRequestPermission", "no tengo");
+                //   finish();
+                // Toast.makeText(this, "sin cacceso a la cámara",Toast.LENGTH_SHORT).show();
+
             }
-        }else if (requestCode == SOLICITUD_PERMISO_ALMACENAMIENTO){
+        } else if (requestCode == SOLICITUD_PERMISO_ALMACENAMIENTO) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this,"Permisos Concedidos",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Permisos Concedidos", Toast.LENGTH_SHORT).show();
                 Log.e("onRequest", "permisosCondecidos");
-                takePhoto(input,output);
+                takePhoto(input, output);
 
             } else {
                 Log.e("onRequestPermission", "no tengo");
@@ -119,7 +137,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     @Override
     protected void onResume() {
         super.onResume();
+        Log.e("onResume", "vamos a cargar OpenCV");
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_2_0, this, this);
+        Log.e("onResume", "cargamos librería OpenCV");
     }
 
     @Override
@@ -140,7 +160,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     public void onCameraViewStarted(int width, int height) {
         cam_height = height;
         cam_width = width;
-
     }
 
     @Override
@@ -182,16 +201,33 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     public void onManagerConnected(int status) {
         switch (status) {
             case LoaderCallbackInterface.SUCCESS:
-                Log.e(TAG, "OpenCV se cargó correctamente");
-                cameraView.setMaxFrameSize(cam_width, cam_height);
-                cameraView.enableView();
+                Log.d(TAG, "OpenCV se cargó correctamente");
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("TAG", "tengo permisos");
+                    cameraView.setMaxFrameSize(cam_width, cam_height);
+                    cameraView.enableView();
+                } else {
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                        Snackbar.make(view, "Se necesita permiso para usar la cámara.", Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Log.d("onCreate", "Pedimos permisos rationale");
+                                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, SOLICITUD_PERMISO_CAMARA);
+                            }
+                        }).show();
+                    } else {
+                        Log.d("Oncreate", "Pedimos permisos normales");
+                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, SOLICITUD_PERMISO_CAMARA);
+                    }
+                }
                 break;
             default:
-                Log.e(TAG, "OpenCv no se cargó");
+                Log.d(TAG, "OpenCv no se cargó");
                 Toast.makeText(this, "OpenCV no se cargó", Toast.LENGTH_SHORT).show();
                 finish();
                 break;
         }
+
     }
 
     @Override
@@ -269,7 +305,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     private void takePhoto(final Mat input, final Mat output) {
-        if (ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             // Determina la ruta para crear los archivos
             final long currentTimeMillis = System.currentTimeMillis();
             final String appName = getString(R.string.app_name);
@@ -283,7 +319,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             // Asegurarse que el directorio existe
             File album = new File(albumPath);
             if (!album.isDirectory() && !album.mkdirs()) {
-                Log.e(TAG, "Error al crear el directorio " + albumPath);
+                Log.d(TAG, "Error al crear el directorio " + albumPath);
                 return;
             }
             // Intenta crear los archivos
@@ -293,18 +329,28 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             else
                 Imgproc.cvtColor(output, mBgr, Imgproc.COLOR_RGBA2BGR, 3);
             if (!Imgcodecs.imwrite(photoPathOut, mBgr)) {
-                Log.e(TAG, "Fallo al guardar " + photoPathOut);
+                Log.d(TAG, "Fallo al guardar " + photoPathOut);
             }
             if (input.channels() == 1)
                 Imgproc.cvtColor(input, mBgr, Imgproc.COLOR_GRAY2BGR, 3);
             else
                 Imgproc.cvtColor(input, mBgr, Imgproc.COLOR_RGBA2BGR, 3);
             if (!Imgcodecs.imwrite(photoPathIn, mBgr))
-                Log.e(TAG, "Fallo al guardar " + photoPathIn);
+                Log.d(TAG, "Fallo al guardar " + photoPathIn);
             mBgr.release();
             return;
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Snackbar.make(cameraView, "Se necesita permiso para usar la cámara.", Snackbar.LENGTH_INDEFINITE).setAction("OK", new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Log.d("onCreate", "permisos rationale");
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, SOLICITUD_PERMISO_ALMACENAMIENTO);
+                }
+            }).show();
+        } else {
+            Log.d("Oncreate", "permisos normales");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, SOLICITUD_PERMISO_ALMACENAMIENTO);
         }
-        else ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, SOLICITUD_PERMISO_ALMACENAMIENTO);
 
     }
 }

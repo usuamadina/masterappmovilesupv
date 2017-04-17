@@ -7,4 +7,5 @@
     <string name="cameraInput">Camera</string>
     <string name="file1Input">File 1</string>
     <string name="file2Input">File 2</string>
+    <string name="saveImages">Save Images></string>
 </resources>

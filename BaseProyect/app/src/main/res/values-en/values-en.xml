@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">BaseProyect</string>
-    <string name="menuCamera">Change Camera</string>
-    <string name="menuResolution">Change Resolution</string>
-</resources>
